@@ -1,39 +1,37 @@
 <?php
 
-namespace App;
+namespace App\Aggregate;
 
-use Illuminate\Notifications\Notifiable;
-use Illuminate\Contracts\Auth\MustVerifyEmail;
-use Illuminate\Foundation\Auth\User as Authenticatable;
+use App\Day;
 
-class User extends Authenticatable
+class DayAggregate
 {
-    use Notifiable;
+    private $day;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array
-     */
-    protected $fillable = [
-        'name', 'email', 'password',
-    ];
+    public function __construct(Day $day)
+    {
+        $this->day = $day;
+    }
 
-    /**
-     * The attributes that should be hidden for arrays.
-     *
-     * @var array
-     */
-    protected $hidden = [
-        'password', 'remember_token',
-    ];
+    public function map()
+    {
+        return [
+            'id' => $this->day->id,
+            'date' => $this->day->date,
+            'calorie_limit' => $this->day->calorie_limit,
+            'total_calories' => $this->getTotalCalories($this->day),
+            'meals' => $this->day->meals->all(),
+        ];
+    }
 
-    /**
-     * The attributes that should be cast to native types.
-     *
-     * @var array
-     */
-    protected $casts = [
-        'email_verified_at' => 'datetime',
-    ];
+    private function getTotalCalories(Day $day)
+    {
+        $total = 0;
+
+        foreach ($day->meals as $meal) {
+            $total += $meal->calories;
+        }
+
+        return $total;
+    }
 }
